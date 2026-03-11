@@ -1,0 +1,16 @@
+﻿# Django
+*.pyc
+__pycache__/
+db.sqlite3
+.env
+venv/
+media/
+staticfiles/
+
+# Python
+.python-version
+pip-log.txt
+pip-delete-this-directory.txt
+.toast
+.build
+.target
