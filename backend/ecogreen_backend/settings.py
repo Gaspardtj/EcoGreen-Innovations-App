@@ -11,14 +11,16 @@ env = environ.Env(
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Read .env file
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+# ONLY read .env if the file actually exists (prevents crash on Render)
+env_file = os.path.join(BASE_DIR, '.env')
+if os.path.exists(env_file):
+    environ.Env.read_env(env_file)
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = env('SECRET_KEY', default='django-insecure-default-key-for-dev')
+SECRET_KEY = env('SECRET_KEY', default='django-insecure-production-key-change-this')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = env('DEBUG', default=True)
+DEBUG = env('DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
@@ -44,7 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware', # For serving static files
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -74,7 +76,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'ecogreen_backend.wsgi.application'
 
-# Database
+# Database - Use Neon URL if available, else SQLite
 DATABASES = {
     'default': env.db('DATABASE_URL', default=f'sqlite:///{BASE_DIR}/db.sqlite3')
 }
@@ -99,9 +101,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticatedOrReadOnly',
     ),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
-    'DEFAULT_FILTER_BACKENDS': (
-        'django_filters.rest_framework.DjangoFilterBackend',
-    ),
 }
 
 SIMPLE_JWT = {
@@ -113,15 +112,8 @@ SIMPLE_JWT = {
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
 
-SPECTACULAR_SETTINGS = {
-    'TITLE': 'Ecogreen Innovations API',
-    'DESCRIPTION': 'API for Ecogreen Innovations platform',
-    'VERSION': '1.0.0',
-    'SERVE_INCLUDE_SCHEMA': False,
-}
-
 # CORS Settings
-CORS_ALLOW_ALL_ORIGINS = True # Change in production
+CORS_ALLOW_ALL_ORIGINS = True 
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -134,5 +126,15 @@ STATIC_URL = 'static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = 'media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# WhiteNoise storage for production
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
